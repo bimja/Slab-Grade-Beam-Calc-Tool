@@ -270,16 +270,25 @@
             <div class="note">Include lean-to if present (e.g. 30 + 8 = 38)</div>
           </div>
           <div class="row">
-            <label for="zip">Texas ZIP Code (climatic rating estimate)</label>
+            <label for="zip">Texas ZIP Code (Cw + soil PI estimate)</label>
             <input type="number" id="zip" value="77581" min="75000" max="79999">
             <span class="unit"></span>
-            <div class="note">Houston/Pearland ≈ 25; Dallas ≈ 20; San Antonio ≈ 17–18; West TX ≈ 15</div>
+            <div class="note">Used for Climatic Rating (Cw) and automatic regional PI estimate from USDA-style soil regions</div>
           </div>
           <div class="row">
-            <label for="pi">Effective Plasticity Index (from soils report)</label>
-            <input type="number" id="pi" value="35" min="5" max="80" step="1">
+            <label for="pi">Effective Plasticity Index (PI)</label>
+            <input type="number" id="pi" value="40" min="5" max="80" step="1">
             <span class="unit"></span>
-            <div class="note">REQUIRED. 15-ft weighted average. Typical Houston-area CH clays 30–50</div>
+            <div class="note" id="piNote">
+              Auto-filled from ZIP using regional USDA / Texas soil averages. <strong>Override with soils-report value when available.</strong>
+              <span id="piEstimateDetail" style="display:block; margin-top:2px; color:#1F4E79;"></span>
+            </div>
+          </div>
+          <div class="row">
+            <label style="flex:1 1 100%;">
+              <input type="checkbox" id="piAuto" checked style="width:auto; margin-right:8px; accent-color:#1F4E79;">
+              Auto-update PI when ZIP changes (uncheck to lock manual PI)
+            </label>
           </div>
           <div class="row">
             <label for="w">Unit weight of building + foundation  w</label>
@@ -312,6 +321,23 @@
           <div class="btn-row">
             <button class="btn-primary" onclick="calculate()">Calculate Design</button>
             <button class="btn-secondary" onclick="resetDefaults()">Reset to Defaults</button>
+          </div>
+
+          <div style="margin-top:16px; padding-top:14px; border-top:1px solid #e0e0e0;">
+            <div class="row" style="margin-bottom:8px;">
+              <label for="projectName">Project name (for save / load)</label>
+              <input type="text" id="projectName" value="Hamlin Garage" style="flex:0 0 220px; color:#000; font-weight:600;" placeholder="e.g. Hamlin 25x25 Garage">
+              <span class="unit"></span>
+            </div>
+            <div class="btn-row" style="margin-top:8px;">
+              <button class="btn-primary" onclick="saveProject()" style="background:#2e7d32;">Save Project</button>
+              <button class="btn-secondary" onclick="loadProject()">Load Project</button>
+              <button class="btn-secondary" onclick="listSavedProjects()">List Saved</button>
+              <button class="btn-secondary" onclick="exportProjectFile()" title="Download JSON file">Export File</button>
+              <button class="btn-secondary" onclick="document.getElementById('importFile').click()" title="Load from JSON file">Import File</button>
+              <input type="file" id="importFile" accept=".json,application/json" style="display:none;" onchange="importProjectFile(event)">
+            </div>
+            <div id="saveStatus" style="margin-top:8px; font-size:0.85rem; color:#2e7d32; min-height:1.2em;"></div>
           </div>
         </div>
       </div>
@@ -653,6 +679,21 @@
       </div>
 
       <div class="section">
+        <div class="section-header">Automatic PI Estimate — Data Basis</div>
+        <div class="section-body" style="font-size:0.9rem;">
+          <p>When a Texas ZIP is entered, the tool estimates Effective Plasticity Index from major USDA Major Land Resource Areas (MLRAs) and common engineering soil associations used in Texas foundation practice:</p>
+          <ul style="margin:8px 0 8px 18px; line-height:1.55;">
+            <li><strong>Gulf Coast Prairie</strong> (Houston, Pearland, Brazoria, Galveston) — Beaumont, Bernard, Lake Charles clays → high PI (typically 35–55)</li>
+            <li><strong>Blackland Prairie</strong> (Dallas, Waco, parts of Austin) — Houston Black and similar → high PI (28–50)</li>
+            <li><strong>South Texas Plains</strong> (San Antonio, Coastal Bend) — mixed clay / gravelly / limestone residual → moderate (18–40)</li>
+            <li><strong>East Texas Timberlands</strong> — sandy loams over clay → moderate (18–40)</li>
+            <li><strong>High Plains / West Texas</strong> — silty, sandy, caliche → lower PI (10–30)</li>
+          </ul>
+          <p style="margin-top:8px;"><strong>Important:</strong> These are regional averages for preliminary sizing only. USDA Web Soil Survey (SSURGO) map-unit data and a site-specific geotechnical investigation (15-ft weighted Effective PI) are required for final PE-sealed design. Local fill, slope, and drainage can change the design significantly.</p>
+        </div>
+      </div>
+
+      <div class="section">
         <div class="section-header">Metal Building Coordination Notes</div>
         <div class="section-body" style="font-size:0.9rem;">
           <ul style="margin-left:18px; line-height:1.6;">
@@ -693,6 +734,68 @@ function getCw(zip, override) {
   if (zip >= 78000 && zip <= 78999) return 18;      // SA / Austin / South-Central
   if (zip >= 79000 && zip <= 79999) return 15;      // West / Panhandle
   return 20;
+}
+
+/**
+ * Regional Effective PI estimate from Texas ZIP.
+ * Based on major USDA MLRA / common engineering soil associations in Texas:
+ *  - Gulf Coast Prairie / Beaumont clay (Houston metro): high PI CH
+ *  - Blackland Prairie (Dallas–Waco–Austin corridor): high PI
+ *  - South Texas Plains / San Antonio: moderate–high
+ *  - East Texas Timberlands: moderate, variable
+ *  - High Plains / West Texas: lower PI, more silty/sandy
+ * Values are typical 15-ft weighted averages used in foundation practice.
+ * ALWAYS replace with site-specific geotech report when available.
+ */
+function getSoilFromZip(zip) {
+  zip = parseInt(zip) || 77581;
+
+  // --- Houston / Gulf Coast / Upper Texas Coast (very high PI Beaumont, Lake Charles, Bernard clays)
+  if (zip >= 77000 && zip <= 77299) // Houston core
+    return { pi: 42, range: '35–55', region: 'Houston Gulf Coast Prairie (Beaumont/Bernard clay)', note: 'Highly expansive CH clays common' };
+  if (zip >= 77300 && zip <= 77399) // North Houston / Conroe / The Woodlands
+    return { pi: 38, range: '30–50', region: 'N. Houston / Montgomery Co. coastal prairie', note: 'Expansive clays; some sandy lenses' };
+  if (zip >= 77400 && zip <= 77499) // SW Houston / Sugar Land / Richmond
+    return { pi: 40, range: '32–52', region: 'Fort Bend / SW Houston coastal prairie', note: 'High PI CH clays predominant' };
+  if (zip >= 77500 && zip <= 77599) // SE Houston / Pearland / Galveston / Brazoria
+    return { pi: 40, range: '32–55', region: 'SE Houston / Brazoria / Galveston coastal prairie', note: 'Beaumont & Lake Charles high-PI clays' };
+  if (zip >= 77600 && zip <= 77799) // Beaumont / Port Arthur / Orange
+    return { pi: 38, range: '30–50', region: 'Golden Triangle / upper coastal prairie', note: 'Expansive coastal clays' };
+
+  // --- Dallas–Fort Worth / Blackland Prairie
+  if (zip >= 75000 && zip <= 75399) // Dallas core / Collin / Denton east
+    return { pi: 36, range: '28–48', region: 'Dallas Blackland Prairie', note: 'Houston Black & similar high-PI clays' };
+  if (zip >= 76000 && zip <= 76199) // Fort Worth / Tarrant
+    return { pi: 34, range: '25–45', region: 'Fort Worth Prairie / Grand Prairie', note: 'Mixed clay & limestone residual' };
+  if (zip >= 76200 && zip <= 76299) // Denton / north
+    return { pi: 35, range: '26–46', region: 'N. Blackland / Denton area', note: 'Expansive clays common' };
+  if (zip >= 75400 && zip <= 75499) // NE Blackland (Greenville, etc.)
+    return { pi: 37, range: '30–50', region: 'NE Blackland Prairie', note: 'High-PI clays' };
+
+  // --- Austin / Central Texas
+  if (zip >= 78600 && zip <= 78799) // Austin metro
+    return { pi: 30, range: '20–42', region: 'Austin / Balcones / Blackland transition', note: 'Variable: clay to limestone residual' };
+  if (zip >= 76500 && zip <= 76799) // Waco / Temple / Killeen
+    return { pi: 34, range: '25–45', region: 'Central Blackland / Waco area', note: 'Houston Black & similar' };
+
+  // --- San Antonio / South Central
+  if (zip >= 78000 && zip <= 78299) // San Antonio metro
+    return { pi: 28, range: '18–40', region: 'San Antonio / South Texas Plains', note: 'Mixed clay, gravelly, and limestone soils' };
+  if (zip >= 78300 && zip <= 78599) // Corpus / Coastal Bend / Rio Grande Valley
+    return { pi: 32, range: '22–45', region: 'Coastal Bend / South Texas', note: 'Variable coastal & alluvial clays' };
+
+  // --- East Texas
+  if (zip >= 75600 && zip <= 75999) // Tyler / Longview / East Texas
+    return { pi: 28, range: '18–40', region: 'East Texas Timberlands', note: 'Moderate PI; sandy loams over clay' };
+
+  // --- West Texas / Panhandle / Permian
+  if (zip >= 79000 && zip <= 79499) // Lubbock / Amarillo / Panhandle
+    return { pi: 20, range: '12–30', region: 'High Plains / Panhandle', note: 'Lower PI; silty & sandy soils, caliche' };
+  if (zip >= 79500 && zip <= 79999) // Abilene / Midland / Odessa / El Paso
+    return { pi: 18, range: '10–28', region: 'West Texas / Permian Basin', note: 'Generally lower PI; caliche & alluvial' };
+
+  // --- Fallback
+  return { pi: 32, range: '20–45', region: 'Texas (general)', note: 'Regional average — obtain site soils report' };
 }
 
 function get1C(pi) {
@@ -921,23 +1024,198 @@ function calculate() {
   document.getElementById('sumFactors').textContent = Cw + ' / ' + oneC.toFixed(2) + ' / ' + Ic.toFixed(1);
 }
 
+function applyPiFromZip() {
+  const zip = document.getElementById('zip').value;
+  const soil = getSoilFromZip(zip);
+  const autoOn = document.getElementById('piAuto').checked;
+  if (autoOn) {
+    document.getElementById('pi').value = soil.pi;
+  }
+  // Always update the explanatory text
+  const detail = document.getElementById('piEstimateDetail');
+  if (detail) {
+    detail.innerHTML = 'Region: <strong>' + soil.region + '</strong> &nbsp;|&nbsp; Typical range: ' +
+      soil.range + ' &nbsp;|&nbsp; Estimate: <strong>' + soil.pi + '</strong> &nbsp;— ' + soil.note;
+  }
+}
+
 function resetDefaults() {
   document.getElementById('length').value = 60;
   document.getElementById('width').value = 30;
   document.getElementById('zip').value = 77581;
-  document.getElementById('pi').value = 35;
+  document.getElementById('piAuto').checked = true;
   document.getElementById('w').value = 200;
   document.getElementById('fc').value = 3000;
   document.getElementById('fy').value = 60000;
   document.getElementById('bwidth').value = 12;
   document.getElementById('cwOverride').value = '';
+  document.getElementById('projectName').value = 'Hamlin Garage';
+  applyPiFromZip();   // sets PI from ZIP
   calculate();
+  setStatus('Reset to defaults.', 'info');
+}
+
+// ========== SAVE / LOAD PROJECTS ==========
+const STORAGE_KEY = 'txSlabProjects';
+
+function getInputs() {
+  return {
+    projectName: document.getElementById('projectName').value || 'Untitled',
+    length: document.getElementById('length').value,
+    width: document.getElementById('width').value,
+    zip: document.getElementById('zip').value,
+    pi: document.getElementById('pi').value,
+    piAuto: document.getElementById('piAuto').checked,
+    w: document.getElementById('w').value,
+    fc: document.getElementById('fc').value,
+    fy: document.getElementById('fy').value,
+    bwidth: document.getElementById('bwidth').value,
+    cwOverride: document.getElementById('cwOverride').value,
+    savedAt: new Date().toISOString()
+  };
+}
+
+function setInputs(data) {
+  if (!data) return;
+  if (data.projectName != null) document.getElementById('projectName').value = data.projectName;
+  if (data.length != null) document.getElementById('length').value = data.length;
+  if (data.width != null) document.getElementById('width').value = data.width;
+  if (data.zip != null) document.getElementById('zip').value = data.zip;
+  if (data.piAuto != null) document.getElementById('piAuto').checked = !!data.piAuto;
+  if (data.pi != null) document.getElementById('pi').value = data.pi;
+  if (data.w != null) document.getElementById('w').value = data.w;
+  if (data.fc != null) document.getElementById('fc').value = data.fc;
+  if (data.fy != null) document.getElementById('fy').value = data.fy;
+  if (data.bwidth != null) document.getElementById('bwidth').value = data.bwidth;
+  if (data.cwOverride != null) document.getElementById('cwOverride').value = data.cwOverride;
+  // Refresh soil note from ZIP (without overwriting locked PI)
+  const soil = getSoilFromZip(document.getElementById('zip').value);
+  const detail = document.getElementById('piEstimateDetail');
+  if (detail) {
+    detail.innerHTML = 'Region: <strong>' + soil.region + '</strong> &nbsp;|&nbsp; Typical range: ' +
+      soil.range + ' &nbsp;|&nbsp; Estimate: <strong>' + soil.pi + '</strong> &nbsp;— ' + soil.note;
+  }
+  calculate();
+}
+
+function getAllProjects() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function setStatus(msg, type) {
+  const el = document.getElementById('saveStatus');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = type === 'error' ? '#c62828' : (type === 'info' ? '#555' : '#2e7d32');
+}
+
+function saveProject() {
+  const data = getInputs();
+  const name = (data.projectName || 'Untitled').trim();
+  if (!name) {
+    setStatus('Enter a project name before saving.', 'error');
+    return;
+  }
+  const all = getAllProjects();
+  all[name] = data;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+    setStatus('Saved “‘ + name + '” (' + new Date().toLocaleString() + '). Stored in this browser.', 'ok');
+  } catch (e) {
+    setStatus('Save failed: ' + e.message, 'error');
+  }
+}
+
+function loadProject() {
+  const name = (document.getElementById('projectName').value || '').trim();
+  if (!name) {
+    setStatus('Enter the project name to load, or click List Saved.', 'error');
+    return;
+  }
+  const all = getAllProjects();
+  if (!all[name]) {
+    setStatus('No saved project named “‘ + name + '”. Click List Saved to see names.', 'error');
+    return;
+  }
+  setInputs(all[name]);
+  setStatus('Loaded “‘ + name + '” (saved ' + (all[name].savedAt ? new Date(all[name].savedAt).toLocaleString() : 'unknown') + ').', 'ok');
+}
+
+function listSavedProjects() {
+  const all = getAllProjects();
+  const names = Object.keys(all);
+  if (names.length === 0) {
+    setStatus('No saved projects in this browser yet.', 'info');
+    return;
+  }
+  // Simple picker via prompt
+  const list = names.map((n, i) => (i + 1) + '. ' + n + (all[n].savedAt ? '  (' + new Date(all[n].savedAt).toLocaleDateString() + ')' : '')).join('\n');
+  const choice = prompt('Saved projects:\n\n' + list + '\n\nType the project name to load (or Cancel):');
+  if (choice && all[choice.trim()]) {
+    document.getElementById('projectName').value = choice.trim();
+    setInputs(all[choice.trim()]);
+    setStatus('Loaded “‘ + choice.trim() + '”.', 'ok');
+  } else if (choice) {
+    setStatus('Name not found. Use the exact name from the list.', 'error');
+  }
+}
+
+function exportProjectFile() {
+  const data = getInputs();
+  const name = (data.projectName || 'slab-project').replace(/[^\w\- ]+/g, '').trim() || 'slab-project';
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  setStatus('Exported “‘ + name + '.json”. You can re-import this file later on any computer.', 'ok');
+}
+
+function importProjectFile(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      setInputs(data);
+      setStatus('Imported “‘ + (data.projectName || file.name) + '”.', 'ok');
+    } catch (err) {
+      setStatus('Import failed: invalid JSON file.', 'error');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // allow re-importing same file
 }
 
 // Auto-calculate on load and on input change
 document.addEventListener('DOMContentLoaded', () => {
+  applyPiFromZip();
   calculate();
+
+  // ZIP change → refresh PI estimate (if auto enabled) then recalculate
+  document.getElementById('zip').addEventListener('input', () => {
+    applyPiFromZip();
+    calculate();
+  });
+
+  // Toggle auto-PI
+  document.getElementById('piAuto').addEventListener('change', () => {
+    if (document.getElementById('piAuto').checked) {
+      applyPiFromZip();
+      calculate();
+    }
+  });
+
+  // All other inputs
   document.querySelectorAll('#calc input').forEach(inp => {
+    if (inp.id === 'zip' || inp.id === 'piAuto') return; // already handled
     inp.addEventListener('input', calculate);
   });
 });
