@@ -1124,7 +1124,7 @@ function saveProject() {
   all[name] = data;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-    setStatus('Saved “‘ + name + '” (' + new Date().toLocaleString() + '). Stored in this browser.', 'ok');
+    setStatus('Saved "' + name + '" (' + new Date().toLocaleString() + '). Stored in this browser.', 'ok');
   } catch (e) {
     setStatus('Save failed: ' + e.message, 'error');
   }
@@ -1138,11 +1138,11 @@ function loadProject() {
   }
   const all = getAllProjects();
   if (!all[name]) {
-    setStatus('No saved project named “‘ + name + '”. Click List Saved to see names.', 'error');
+    setStatus('No saved project named "' + name + '". Click List Saved to see names.', 'error');
     return;
   }
   setInputs(all[name]);
-  setStatus('Loaded “‘ + name + '” (saved ' + (all[name].savedAt ? new Date(all[name].savedAt).toLocaleString() : 'unknown') + ').', 'ok');
+  setStatus('Loaded "' + name + '" (saved ' + (all[name].savedAt ? new Date(all[name].savedAt).toLocaleString() : 'unknown') + ').', 'ok');
 }
 
 function listSavedProjects() {
@@ -1158,7 +1158,7 @@ function listSavedProjects() {
   if (choice && all[choice.trim()]) {
     document.getElementById('projectName').value = choice.trim();
     setInputs(all[choice.trim()]);
-    setStatus('Loaded “‘ + choice.trim() + '”.', 'ok');
+    setStatus('Loaded "' + choice.trim() + '".', 'ok');
   } else if (choice) {
     setStatus('Name not found. Use the exact name from the list.', 'error');
   }
@@ -1174,7 +1174,7 @@ function exportProjectFile() {
   a.download = name + '.json';
   a.click();
   URL.revokeObjectURL(url);
-  setStatus('Exported “‘ + name + '.json”. You can re-import this file later on any computer.', 'ok');
+  setStatus('Exported "' + name + '.json". You can re-import this file later on any computer.', 'ok');
 }
 
 function importProjectFile(event) {
@@ -1185,7 +1185,7 @@ function importProjectFile(event) {
     try {
       const data = JSON.parse(e.target.result);
       setInputs(data);
-      setStatus('Imported “‘ + (data.projectName || file.name) + '”.', 'ok');
+      setStatus('Imported "' + (data.projectName || file.name) + '".', 'ok');
     } catch (err) {
       setStatus('Import failed: invalid JSON file.', 'error');
     }
