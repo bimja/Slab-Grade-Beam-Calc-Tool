@@ -397,6 +397,10 @@
             <span class="label">Recommended slab thickness</span>
             <span class="result-value" id="outSlab">—</span>
           </div>
+          <div class="note" style="margin:-2px 0 8px 0; color:#555;">
+            Driven mainly by Effective PI → (1-C). Also increases when beam spacing is large or unit weight ≥ 250 psf.
+            Change the PI input to see thickness update (try PI = 15, 25, 35, 45).
+          </div>
           <div class="result-row">
             <span class="label">Min slab reinforcing As·fy (lb/ft)</span>
             <span class="result-value" id="outAsfy">—</span>
@@ -691,26 +695,34 @@ function getCw(zip, override) {
 }
 
 function get1C(pi) {
+  // More granular mapping so slab thickness and other results respond clearly to PI changes
   pi = parseFloat(pi) || 35;
-  if (pi <= 15) return 0.10;
-  if (pi <= 25) return 0.15;
-  if (pi <= 35) return 0.22;
-  if (pi <= 45) return 0.28;
-  return 0.35;
+  if (pi <= 12) return 0.08;
+  if (pi <= 18) return 0.12;
+  if (pi <= 25) return 0.16;
+  if (pi <= 30) return 0.20;
+  if (pi <= 35) return 0.24;
+  if (pi <= 40) return 0.28;
+  if (pi <= 50) return 0.32;
+  return 0.36;
 }
 
 function getIc(oneC) {
-  if (oneC <= 0.15) return 5.0;
-  if (oneC <= 0.22) return 6.5;
-  if (oneC <= 0.28) return 7.5;
-  if (oneC <= 0.35) return 9.0;
+  // Empirical cantilever length from (1-C) — smoother steps
+  if (oneC <= 0.12) return 5.0;
+  if (oneC <= 0.18) return 6.0;
+  if (oneC <= 0.24) return 7.0;
+  if (oneC <= 0.30) return 8.0;
+  if (oneC <= 0.34) return 9.5;
   return 11.0;
 }
 
 function getS(oneC) {
-  if (oneC <= 0.15) return 20;
-  if (oneC <= 0.22) return 17;
-  if (oneC <= 0.28) return 15;
+  // Max beam spacing (ft) — tighter as soil-climate demand rises
+  if (oneC <= 0.12) return 20;
+  if (oneC <= 0.18) return 18;
+  if (oneC <= 0.24) return 16;
+  if (oneC <= 0.30) return 14;
   return 12;
 }
 
@@ -787,14 +799,32 @@ function calculate() {
   const dRec = Math.ceil(Math.max(dL, dS));
   const dEff = dRec - 3.0;              // effective depth approx (clear cover + ½ bar)
 
-  // Slab
+  // Slab thickness — driven primarily by soil-climate (1-C / PI) and secondarily by
+  // beam spacing and unit weight (heavier loads or larger spans between beams → thicker slab)
   let slabThk, asfy, rebarNote;
-  if (oneC <= 0.15) { slabThk = 4; asfy = 2600; }
-  else if (oneC <= 0.25) { slabThk = 5; asfy = 4000; }
-  else { slabThk = 6; asfy = 5200; }
+  // Base thickness from (1-C)
+  if (oneC <= 0.12) {
+    slabThk = 4; asfy = 2600;
+  } else if (oneC <= 0.18) {
+    slabThk = 4.5; asfy = 3200;
+  } else if (oneC <= 0.24) {
+    slabThk = 5; asfy = 4000;
+  } else if (oneC <= 0.30) {
+    slabThk = 5.5; asfy = 4600;
+  } else {
+    slabThk = 6; asfy = 5200;
+  }
+  // Bump thickness when beam spacing is large or unit weight is high
+  if (S >= 18 || w >= 250) slabThk = Math.min(6.5, slabThk + 0.5);
+  if (S >= 16 && oneC > 0.20) slabThk = Math.min(6.5, slabThk + 0.5);
+  // Round to practical half-inch
+  slabThk = Math.ceil(slabThk * 2) / 2;
+  if (slabThk < 4) slabThk = 4;
+  if (slabThk > 6.5) slabThk = 6.5;
 
   if (asfy <= 3000) rebarNote = '#3 @ 18" o.c. both ways';
-  else rebarNote = '#3 @ 12–16" o.c. or WWR';
+  else if (asfy <= 4200) rebarNote = '#3 @ 14–16" o.c. or WWR';
+  else rebarNote = '#3 @ 12" o.c. or W4×W4 / W5×W5 WWR';
 
   // Flexural steel (simplified Whitney / working-stress hybrid used in Snowden examples)
   // Mu ≈ 1.6 × M (service) for LRFD comparison; φ = 0.90
