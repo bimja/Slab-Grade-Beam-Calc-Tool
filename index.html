@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Texas Slab-on-Ground Foundation Design Tool</title>
+<style>
+  :root {
+    --primary: #1F4E79;
+    --primary-light: #D6EAF8;
+    --accent: #375623;
+    --input-bg: #FFF9C4;
+    --result-bg: #E8F5E9;
+    --warning-bg: #FCE4D6;
+    --border: #B0B0B0;
+    --text: #222;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    background: #f0f4f8;
+    color: var(--text);
+    line-height: 1.45;
+    padding: 12px;
+  }
+  .container {
+    max-width: 980px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    overflow: hidden;
+  }
+  header {
+    background: var(--primary);
+    color: #fff;
+    padding: 18px 24px;
+  }
+  header h1 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  header p {
+    font-size: 0.85rem;
+    opacity: 0.9;
+  }
+  .content { padding: 20px 24px 28px; }
+  .section {
+    margin-bottom: 22px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .section-header {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 10px 16px;
+    border-bottom: 1px solid #c5d9ea;
+  }
+  .section-body { padding: 14px 16px; }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+  .row label {
+    flex: 1 1 280px;
+    font-size: 0.92rem;
+  }
+  .row input, .row select {
+    flex: 0 0 120px;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 0.95rem;
+    background: var(--input-bg);
+    color: #0000cc;
+    font-weight: 600;
+  }
+  .row input:focus, .row select:focus {
+    outline: 2px solid var(--primary);
+    background: #fffde7;
+  }
+  .unit {
+    flex: 0 0 40px;
+    font-size: 0.85rem;
+    color: #555;
+  }
+  .note {
+    flex: 1 1 100%;
+    font-size: 0.78rem;
+    color: #666;
+    margin-top: -4px;
+    margin-bottom: 4px;
+    padding-left: 2px;
+  }
+  .result-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+  .result-row .label {
+    flex: 1 1 280px;
+    font-size: 0.92rem;
+  }
+  .result-value {
+    flex: 0 0 140px;
+    padding: 7px 12px;
+    background: var(--result-bg);
+    border: 1px solid #a5d6a7;
+    border-radius: 5px;
+    font-weight: 700;
+    font-size: 1rem;
+    text-align: center;
+    color: #1b5e20;
+  }
+  .summary-box {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-top: 8px;
+  }
+  .summary-box h3 {
+    color: var(--accent);
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+  }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 20px;
+  }
+  .summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px dashed #a5d6a7;
+    padding-bottom: 4px;
+  }
+  .summary-item .s-label { font-size: 0.9rem; color: #333; }
+  .summary-item .s-value {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #1b5e20;
+  }
+  .warning {
+    background: var(--warning-bg);
+    border: 1px solid #e5956c;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-top: 18px;
+    font-size: 0.85rem;
+    color: #7a2e0e;
+  }
+  .warning strong { display: block; margin-bottom: 6px; font-size: 0.95rem; }
+  .warning ul { margin: 6px 0 0 18px; }
+  footer {
+    background: #f5f5f5;
+    padding: 12px 24px;
+    font-size: 0.75rem;
+    color: #777;
+    border-top: 1px solid #e0e0e0;
+  }
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #163a5c; }
+  .btn-secondary {
+    background: #e0e0e0;
+    color: #333;
+  }
+  .btn-secondary:hover { background: #ccc; }
+  @media (max-width: 600px) {
+    .summary-grid { grid-template-columns: 1fr; }
+    .row label, .result-row .label { flex: 1 1 100%; }
+    header h1 { font-size: 1.2rem; }
+  }
+  .tabs {
+    display: flex;
+    border-bottom: 2px solid var(--primary);
+    margin-bottom: 16px;
+  }
+  .tab {
+    padding: 10px 18px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #555;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+  }
+  .tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  table.ref {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    margin-top: 8px;
+  }
+  table.ref th, table.ref td {
+    border: 1px solid #ccc;
+    padding: 7px 10px;
+    text-align: left;
+  }
+  table.ref th {
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+  table.ref tr:nth-child(even) { background: #f9f9f9; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Texas Slab-on-Ground Foundation Design Tool</h1>
+    <p>WRI TF 700-R-03 (Snowden) empirical method &nbsp;|&nbsp; Basis of Design: ACT Building Systems metal building (TALV1020879484)</p>
+  </header>
+
+  <div class="content">
+    <div class="tabs">
+      <div class="tab active" data-tab="calc">Design Calculator</div>
+      <div class="tab" data-tab="instructions">Instructions</div>
+      <div class="tab" data-tab="reference">Quick Reference</div>
+    </div>
+
+    <!-- ===================== CALCULATOR TAB ===================== -->
+    <div id="calc" class="tab-content active">
+
+      <!-- 1. Inputs -->
+      <div class="section">
+        <div class="section-header">1. User Inputs (edit yellow fields)</div>
+        <div class="section-body">
+          <div class="row">
+            <label for="length">Building Overall Length L (long direction)</label>
+            <input type="number" id="length" value="60" min="10" max="200" step="0.5">
+            <span class="unit">ft</span>
+            <div class="note">Typical metal building / house / garage length</div>
+          </div>
+          <div class="row">
+            <label for="width">Building Overall Width L′ (short direction)</label>
+            <input type="number" id="width" value="30" min="10" max="150" step="0.5">
+            <span class="unit">ft</span>
+            <div class="note">Include lean-to if present (e.g. 30 + 8 = 38)</div>
+          </div>
+          <div class="row">
+            <label for="zip">Texas ZIP Code (climatic rating estimate)</label>
+            <input type="number" id="zip" value="77581" min="75000" max="79999">
+            <span class="unit"></span>
+            <div class="note">Houston/Pearland ≈ 25; Dallas ≈ 20; San Antonio ≈ 17–18; West TX ≈ 15</div>
+          </div>
+          <div class="row">
+            <label for="pi">Effective Plasticity Index (from soils report)</label>
+            <input type="number" id="pi" value="35" min="5" max="80" step="1">
+            <span class="unit"></span>
+            <div class="note">REQUIRED. 15-ft weighted average. Typical Houston-area CH clays 30–50</div>
+          </div>
+          <div class="row">
+            <label for="w">Unit weight of building + foundation  w</label>
+            <input type="number" id="w" value="200" min="100" max="400" step="10">
+            <span class="unit">psf</span>
+            <div class="note">200 psf typical for 1-story brick veneer or light metal + slab</div>
+          </div>
+          <div class="row">
+            <label for="fc">Concrete compressive strength f′c</label>
+            <input type="number" id="fc" value="3000" min="2500" max="5000" step="500">
+            <span class="unit">psi</span>
+          </div>
+          <div class="row">
+            <label for="fy">Reinforcing yield strength fy</label>
+            <input type="number" id="fy" value="60000" min="40000" max="75000" step="5000">
+            <span class="unit">psi</span>
+          </div>
+          <div class="row">
+            <label for="bwidth">Assumed beam width each  b</label>
+            <input type="number" id="bwidth" value="12" min="8" max="24" step="1">
+            <span class="unit">in</span>
+            <div class="note">Common 9–16 in. Wider beams reduce required depth</div>
+          </div>
+          <div class="row">
+            <label for="cwOverride">Override Climatic Rating Cw? (leave blank to auto)</label>
+            <input type="number" id="cwOverride" value="" min="10" max="35" step="1" placeholder="auto">
+            <span class="unit"></span>
+            <div class="note">Typical Texas: West 15, Central 17–20, East/Houston 22–30</div>
+          </div>
+          <div class="btn-row">
+            <button class="btn-primary" onclick="calculate()">Calculate Design</button>
+            <button class="btn-secondary" onclick="resetDefaults()">Reset to Defaults</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Climatic & Soil -->
+      <div class="section">
+        <div class="section-header">2. Climatic &amp; Soil-Climate Factors</div>
+        <div class="section-body">
+          <div class="result-row">
+            <span class="label">Estimated Climatic Rating Cw</span>
+            <span class="result-value" id="outCw">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Soil-Climate Factor (1-C)</span>
+            <span class="result-value" id="out1C">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Cantilever Length Ic (ft)</span>
+            <span class="result-value" id="outIc">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Design Cantilever Lc,long = kL × Ic</span>
+            <span class="result-value" id="outLcL">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Design Cantilever Lc,short = kS × Ic</span>
+            <span class="result-value" id="outLcS">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Beam Spacing -->
+      <div class="section">
+        <div class="section-header">3. Beam Spacing &amp; Number</div>
+        <div class="section-body">
+          <div class="result-row">
+            <span class="label">Max recommended beam spacing S (ft)</span>
+            <span class="result-value" id="outS">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Number of beams LONG direction (Nl)</span>
+            <span class="result-value" id="outNl">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Number of beams SHORT direction (Ns)</span>
+            <span class="result-value" id="outNs">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Total beam width B_long / B_short (in)</span>
+            <span class="result-value" id="outB">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Moments & Depths -->
+      <div class="section">
+        <div class="section-header">4. Design Moments &amp; Required Beam Depths</div>
+        <div class="section-body">
+          <div class="result-row">
+            <span class="label">Moment LONG direction ML (kip-ft)</span>
+            <span class="result-value" id="outML">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Moment SHORT direction MS (kip-ft)</span>
+            <span class="result-value" id="outMS">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Required depth LONG dL (in)</span>
+            <span class="result-value" id="outDL">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Required depth SHORT dS (in)</span>
+            <span class="result-value" id="outDS">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Slab -->
+      <div class="section">
+        <div class="section-header">5. Slab Thickness &amp; Slab Reinforcing</div>
+        <div class="section-body">
+          <div class="result-row">
+            <span class="label">Recommended slab thickness</span>
+            <span class="result-value" id="outSlab">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Min slab reinforcing As·fy (lb/ft)</span>
+            <span class="result-value" id="outAsfy">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Suggested slab rebar (Grade 60)</span>
+            <span class="result-value" id="outRebar" style="flex:0 0 280px; font-size:0.85rem;">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5b. Grade Beam Reinforcing -->
+      <div class="section">
+        <div class="section-header">5b. Grade Beam Reinforcing — Top, Bottom &amp; Stirrups</div>
+        <div class="section-body">
+          <p style="font-size:0.82rem; color:#555; margin-bottom:12px;">
+            Based on governing moment (larger of ML / MS). φ = 0.90, lever arm ≈ d − 3″ (bottom) / d − 4″ (top). 
+            Bar selection prefers practical Grade 60 bars. Stirrups sized for Vu and detailing requirements (ACI 318).
+          </p>
+
+          <div class="result-row">
+            <span class="label">Governing design moment (kip-ft)</span>
+            <span class="result-value" id="outMg">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Required As bottom (positive)  [in²]</span>
+            <span class="result-value" id="outAsBot">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label"><strong>BOTTOM bars (positive)</strong></span>
+            <span class="result-value" id="outBotBars" style="flex:0 0 260px; font-size:0.9rem; background:#c8e6c9;">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Required As top (negative)  [in²]</span>
+            <span class="result-value" id="outAsTop">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label"><strong>TOP bars (negative)</strong></span>
+            <span class="result-value" id="outTopBars" style="flex:0 0 260px; font-size:0.9rem; background:#c8e6c9;">—</span>
+          </div>
+
+          <hr style="margin:14px 0; border:none; border-top:1px solid #ddd;">
+
+          <div class="result-row">
+            <span class="label">Design shear Vu (approx)  [kips]</span>
+            <span class="result-value" id="outVu">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Concrete shear capacity φVc  [kips]</span>
+            <span class="result-value" id="outVc">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label"><strong>STIRRUPS</strong></span>
+            <span class="result-value" id="outStirrups" style="flex:0 0 300px; font-size:0.88rem; background:#c8e6c9;">—</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Stirrup spacing (max)  [in]</span>
+            <span class="result-value" id="outStirrupSp">—</span>
+          </div>
+          <div class="note" style="margin-top:8px; color:#666;">
+            Stirrups: #3 or #4 closed ties. Provide tighter spacing near ends (first 1/4 of span) and at beam intersections. 
+            Minimum 2 continuous #4 corner bars recommended for cage stability even when calculated As is lower.
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Summary -->
+      <div class="section">
+        <div class="section-header" style="background:#375623; color:#fff;">6. Design Summary — Use These Values</div>
+        <div class="section-body">
+          <div class="summary-box">
+            <h3>Preliminary Foundation Sizing &amp; Reinforcing</h3>
+            <div class="summary-grid">
+              <div class="summary-item">
+                <span class="s-label">Building Size</span>
+                <span class="s-value" id="sumSize">—</span>
+              </div>
+              <div class="summary-item">
+                <span class="s-label">Grade Beam (W × D)</span>
+                <span class="s-value" id="sumBeam">—</span>
+              </div>
+              <div class="summary-item">
+                <span class="s-label">Beams (Long / Short)</span>
+                <span class="s-value" id="sumNum">—</span>
+              </div>
+              <div class="summary-item">
+                <span class="s-label">Slab Thickness</span>
+                <span class="s-value" id="sumSlab">—</span>
+              </div>
+              <div class="summary-item">
+                <span class="s-label">BOTTOM bars</span>
+                <span class="s-value" id="sumBot" style="font-size:0.95rem;">—</span>
+              </div>
+              <div class="summary-item">
+                <span class="s-label">TOP bars</span>
+                <span class="s-value" id="sumTop" style="font-size:0.95rem;">—</span>
+              </div>
+              <div class="summary-item">
+                <span class="s-label">Stirrups</span>
+                <span class="s-value" id="sumStirrup" style="font-size:0.9rem;">—</span>
+              </div>
+              <div class="summary-item">
+                <span class="s-label">Cw / (1-C) / Ic</span>
+                <span class="s-value" id="sumFactors">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="warning">
+        <strong>⚠ CRITICAL NOTES</strong>
+        <ul>
+          <li>This tool is a <strong>preliminary sizing aid only</strong>. It does NOT replace a licensed Texas PE design or a site-specific geotechnical investigation.</li>
+          <li>Effective PI, slope correction, over-consolidation, and fill conditions must come from a soils report. Uncompacted fill under beams will cause failure.</li>
+          <li>Metal building column reactions (from the ACT/Mueller stamped drawings) must be checked separately for local bearing and uplift anchors.</li>
+          <li>Always provide both positive and negative beam steel and continuous slab reinforcing. Do not cut diaphragm sheeting.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ===================== INSTRUCTIONS TAB ===================== -->
+    <div id="instructions" class="tab-content">
+      <div class="section">
+        <div class="section-header">How to Use This Tool</div>
+        <div class="section-body" style="font-size:0.92rem;">
+          <ol style="margin-left:18px; line-height:1.7;">
+            <li>Enter the overall building length and width in feet.</li>
+            <li>Enter the Texas ZIP code. The tool estimates a Climatic Rating (Cw) based on broad regional bands.
+              <ul style="margin:4px 0 4px 16px;">
+                <li>Houston / Gulf Coast / East Texas (77xxx) ≈ 25</li>
+                <li>Dallas / North Central (75xxx–76xxx) ≈ 20–22</li>
+                <li>San Antonio / South Central (78xxx) ≈ 17–18</li>
+                <li>West Texas / Panhandle (79xxx) ≈ 15</li>
+              </ul>
+              Override Cw directly if you have a site-specific value.
+            </li>
+            <li>Enter the Effective Plasticity Index from the geotechnical report (15-ft weighted average). This is the single most important soil parameter.</li>
+            <li>Adjust unit weight if needed (200 psf is conservative for most 1-story brick-veneer or light metal buildings).</li>
+            <li>Click <strong>Calculate Design</strong>. Review the calculated grade-beam depth and slab thickness. Round depths up to practical even inches if desired.</li>
+            <li>Provide both top (negative) and bottom (positive) reinforcing in the grade beams plus continuous slab steel.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Key Formulas (Snowden / WRI TF 700-R-03)</div>
+        <div class="section-body" style="font-size:0.9rem;">
+          <p><strong>Moment:</strong> M = w × Lc² × L′ / 2000 &nbsp;(kip-ft)</p>
+          <p style="margin-top:6px;"><strong>Beam depth:</strong> d ≈ (664 × M × Lc / B)<sup>1/3</sup> &nbsp;where B = total width of all beams in that direction (in)</p>
+          <p style="margin-top:6px;"><strong>Cantilever length Lc</strong> derived from empirical (1-C) vs Ic curve and length-modification factors kL ≈ 0.93 / kS ≈ 0.80</p>
+          <p style="margin-top:6px;"><strong>Max beam spacing</strong> from experience-modified Fig. 17 of the WRI document</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Relationship to the Attached Metal Building Drawings</div>
+        <div class="section-body" style="font-size:0.9rem;">
+          <p>The ACT Building Systems drawings (TALV1020879484) for the Hamlin / Mueller project show a ~60 ft × 30 ft main building plus lean-to. Column base reactions and anchor forces are given; the foundation itself is noted as “by others”.</p>
+          <p style="margin-top:8px;">This tool produces a conventional stiffened slab-on-ground that can support such light metal buildings on expansive Texas soils when the soils data are properly entered. Always coordinate anchor bolt layout, edge distance, and local thickening under columns with the metal building supplier’s reactions.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== REFERENCE TAB ===================== -->
+    <div id="reference" class="tab-content">
+      <div class="section">
+        <div class="section-header">Typical Texas Climatic Ratings &amp; Soil Ranges</div>
+        <div class="section-body">
+          <table class="ref">
+            <thead>
+              <tr>
+                <th>Region / ZIP Band</th>
+                <th>Approx Cw</th>
+                <th>Typical PI Range</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Houston / Pearland / East (77xxx)</td>
+                <td>25</td>
+                <td>30–55</td>
+                <td>High activity clays common; 1-C often 0.25–0.35</td>
+              </tr>
+              <tr>
+                <td>Dallas / Fort Worth (75–76xxx)</td>
+                <td>20</td>
+                <td>20–40</td>
+                <td>Variable; Blackland Prairie high PI</td>
+              </tr>
+              <tr>
+                <td>San Antonio / Austin (78xxx)</td>
+                <td>17–18</td>
+                <td>25–40</td>
+                <td>Example in WRI document used Cw=17, PI=37</td>
+              </tr>
+              <tr>
+                <td>West Texas / Panhandle (79xxx)</td>
+                <td>15</td>
+                <td>15–30</td>
+                <td>More arid; lower moisture variation</td>
+              </tr>
+              <tr>
+                <td>Coastal / Corpus (south)</td>
+                <td>22–25</td>
+                <td>25–45</td>
+                <td>High humidity but seasonal extremes</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Typical Grade Beam Sizes (Preliminary)</div>
+        <div class="section-body">
+          <table class="ref">
+            <thead>
+              <tr>
+                <th>Condition</th>
+                <th>Beam Depth (in)</th>
+                <th>Beam Width (in)</th>
+                <th>Slab (in)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Low PI / arid (West TX)</td>
+                <td>16–20</td>
+                <td>10–12</td>
+                <td>4</td>
+              </tr>
+              <tr>
+                <td>Moderate (Dallas / SA)</td>
+                <td>20–26</td>
+                <td>12</td>
+                <td>5</td>
+              </tr>
+              <tr>
+                <td>High PI / Gulf Coast</td>
+                <td>24–32</td>
+                <td>12–16</td>
+                <td>5–6</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Metal Building Coordination Notes</div>
+        <div class="section-body" style="font-size:0.9rem;">
+          <ul style="margin-left:18px; line-height:1.6;">
+            <li>Column base reactions and anchor quantities are shown on the ACT stamped plans — transfer those forces into the grade beams / thickened pads.</li>
+            <li>Edge rebate / thickened edge under wall panels is typically 1.5–2 in additional depth or a separate grade beam.</li>
+            <li>Keep diaphragm (roof &amp; wall sheeting) continuous — do not cut for openings without engineering.</li>
+            <li>Finish floor elevation is shown as 100.00′ on the drawings; set top of slab accordingly.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Reference: WRI TF 700-R-03 (Snowden, 1981/2003) &nbsp;|&nbsp; Basis drawings: TALV1020879484 Hamlin (SO7317338) ACT Building Systems &nbsp;|&nbsp;
+    Tool for Texas light commercial &amp; residential use only. Not a substitute for PE-sealed design.
+  </footer>
+</div>
+
+<script>
+// ========== TAB SWITCHING ==========
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  });
+});
+
+// ========== CALCULATION ENGINE ==========
+function getCw(zip, override) {
+  if (override !== '' && !isNaN(parseFloat(override))) return parseFloat(override);
+  zip = parseInt(zip) || 77581;
+  if (zip >= 75000 && zip <= 75999) return 22;      // Dallas / North
+  if (zip >= 76000 && zip <= 76999) return 20;
+  if (zip >= 77000 && zip <= 77999) return 25;      // Houston / East / Gulf
+  if (zip >= 78000 && zip <= 78999) return 18;      // SA / Austin / South-Central
+  if (zip >= 79000 && zip <= 79999) return 15;      // West / Panhandle
+  return 20;
+}
+
+function get1C(pi) {
+  pi = parseFloat(pi) || 35;
+  if (pi <= 15) return 0.10;
+  if (pi <= 25) return 0.15;
+  if (pi <= 35) return 0.22;
+  if (pi <= 45) return 0.28;
+  return 0.35;
+}
+
+function getIc(oneC) {
+  if (oneC <= 0.15) return 5.0;
+  if (oneC <= 0.22) return 6.5;
+  if (oneC <= 0.28) return 7.5;
+  if (oneC <= 0.35) return 9.0;
+  return 11.0;
+}
+
+function getS(oneC) {
+  if (oneC <= 0.15) return 20;
+  if (oneC <= 0.22) return 17;
+  if (oneC <= 0.28) return 15;
+  return 12;
+}
+
+// Bar area lookup (Grade 60)
+const BAR_AREA = {3: 0.11, 4: 0.20, 5: 0.31, 6: 0.44, 7: 0.60, 8: 0.79, 9: 1.00};
+
+function selectBars(AsReq, maxBars = 6) {
+  // Prefer #4, #5, #6 for constructability in grade beams
+  const candidates = [
+    {size: 4, area: 0.20},
+    {size: 5, area: 0.31},
+    {size: 6, area: 0.44},
+    {size: 7, area: 0.60},
+    {size: 8, area: 0.79}
+  ];
+  let best = null;
+  for (const c of candidates) {
+    const n = Math.ceil(AsReq / c.area);
+    if (n >= 2 && n <= maxBars) {
+      const provided = n * c.area;
+      if (!best || (provided < best.provided * 1.15 && n <= best.n + 1) || n < best.n) {
+        best = {n, size: c.size, provided, label: n + ' – #' + c.size};
+      }
+    }
+  }
+  // Fallback
+  if (!best) {
+    const n = Math.max(2, Math.ceil(AsReq / 0.31));
+    best = {n, size: 5, provided: n * 0.31, label: n + ' – #5'};
+  }
+  // Always recommend at least 2 bars
+  if (best.n < 2) {
+    best = {n: 2, size: 4, provided: 0.40, label: '2 – #4'};
+  }
+  return best;
+}
+
+function calculate() {
+  const L  = parseFloat(document.getElementById('length').value) || 60;
+  const Lp = parseFloat(document.getElementById('width').value) || 30;
+  const zip = document.getElementById('zip').value;
+  const pi  = parseFloat(document.getElementById('pi').value) || 35;
+  const w   = parseFloat(document.getElementById('w').value) || 200;
+  const fc  = parseFloat(document.getElementById('fc').value) || 3000;
+  const fy  = parseFloat(document.getElementById('fy').value) || 60000;
+  const b   = parseFloat(document.getElementById('bwidth').value) || 12;
+  const cwOverride = document.getElementById('cwOverride').value;
+
+  const kL = 0.93;
+  const kS = 0.80;
+
+  // Factors
+  const Cw   = getCw(zip, cwOverride);
+  const oneC = get1C(pi);
+  const Ic   = getIc(oneC);
+  const LcL  = kL * Ic;
+  const LcS  = kS * Ic;
+
+  // Spacing & counts
+  const S  = getS(oneC);
+  const Nl = Math.ceil(Lp / S + 1);
+  const Ns = Math.ceil(L  / S + 1);
+  const BL = Nl * b;
+  const BS = Ns * b;
+
+  // Moments (kip-ft)
+  const ML = w * (LcL ** 2) * Lp / 2000;
+  const MS = w * (LcS ** 2) * L  / 2000;
+  const Mg = Math.max(ML, MS);          // governing moment
+
+  // Depths (in)
+  const dL = Math.pow(664 * ML * LcL / BL, 1/3);
+  const dS = Math.pow(664 * MS * LcS / BS, 1/3);
+  const dRec = Math.ceil(Math.max(dL, dS));
+  const dEff = dRec - 3.0;              // effective depth approx (clear cover + ½ bar)
+
+  // Slab
+  let slabThk, asfy, rebarNote;
+  if (oneC <= 0.15) { slabThk = 4; asfy = 2600; }
+  else if (oneC <= 0.25) { slabThk = 5; asfy = 4000; }
+  else { slabThk = 6; asfy = 5200; }
+
+  if (asfy <= 3000) rebarNote = '#3 @ 18" o.c. both ways';
+  else rebarNote = '#3 @ 12–16" o.c. or WWR';
+
+  // Flexural steel (simplified Whitney / working-stress hybrid used in Snowden examples)
+  // Mu ≈ 1.6 × M (service) for LRFD comparison; φ = 0.90
+  const Mu = 1.6 * Mg;                  // kip-ft → factored
+  const asBot = (Mu * 12) / (0.90 * (fy / 1000) * (dRec - 3));
+  const asTop = (Mu * 12) / (0.90 * (fy / 1000) * (dRec - 4));
+
+  const botBars = selectBars(asBot);
+  const topBars = selectBars(asTop);
+
+  // Shear
+  // Vu ≈ w × Lc × L' / (2 × 1000) for the governing direction (conservative)
+  const Vu = (w * Math.max(LcL, LcS) * Math.max(L, Lp) / 2) / 1000;  // kips (total shear)
+  // Or per beam: distribute
+  const VuBeam = Vu / Math.min(Nl, Ns);  // rough per-beam shear
+  const phiVc = 0.75 * 2 * Math.sqrt(fc) * b * dEff / 1000;  // kips (ACI φVc = 2√f'c b d)
+
+  // Stirrups
+  let stirrupNote, stirrupSp;
+  if (VuBeam <= 0.5 * phiVc) {
+    // Minimum stirrups still recommended for cage
+    stirrupNote = '#3 closed ties @ 12–16" o.c.';
+    stirrupSp = '12–16 in (min. detailing)';
+  } else if (VuBeam <= phiVc) {
+    stirrupNote = '#3 closed ties @ 10–12" o.c.';
+    stirrupSp = '10–12 in';
+  } else {
+    // Need calculated stirrups – use #4
+    const Av = 2 * 0.20; // #4 two-leg
+    const fs = 0.75 * fy / 1000; // ksi
+    const sReq = (Av * fs * dEff) / (VuBeam - phiVc);
+    const sMax = Math.min(dEff / 2, 12);
+    const sUse = Math.min(Math.floor(sReq), sMax);
+    stirrupNote = '#4 closed ties @ ' + Math.max(4, sUse) + '" o.c.';
+    stirrupSp = Math.max(4, sUse) + ' in (calc.)';
+  }
+
+  // Write results
+  document.getElementById('outCw').textContent   = Cw;
+  document.getElementById('out1C').textContent   = oneC.toFixed(2);
+  document.getElementById('outIc').textContent   = Ic.toFixed(1) + ' ft';
+  document.getElementById('outLcL').textContent  = LcL.toFixed(2) + ' ft';
+  document.getElementById('outLcS').textContent  = LcS.toFixed(2) + ' ft';
+
+  document.getElementById('outS').textContent    = S + ' ft';
+  document.getElementById('outNl').textContent   = Nl;
+  document.getElementById('outNs').textContent   = Ns;
+  document.getElementById('outB').textContent    = BL + ' / ' + BS;
+
+  document.getElementById('outML').textContent   = ML.toFixed(1);
+  document.getElementById('outMS').textContent   = MS.toFixed(1);
+  document.getElementById('outDL').textContent   = dL.toFixed(1);
+  document.getElementById('outDS').textContent   = dS.toFixed(1);
+
+  document.getElementById('outSlab').textContent = slabThk + ' in';
+  document.getElementById('outAsfy').textContent = asfy;
+  document.getElementById('outRebar').textContent = rebarNote;
+
+  // New reinforcement outputs
+  document.getElementById('outMg').textContent     = Mg.toFixed(1) + ' k-ft';
+  document.getElementById('outAsBot').textContent  = asBot.toFixed(2);
+  document.getElementById('outBotBars').textContent = botBars.label + '  (As=' + botBars.provided.toFixed(2) + ' in²)';
+  document.getElementById('outAsTop').textContent  = asTop.toFixed(2);
+  document.getElementById('outTopBars').textContent = topBars.label + '  (As=' + topBars.provided.toFixed(2) + ' in²)';
+  document.getElementById('outVu').textContent     = VuBeam.toFixed(1) + ' k (per beam)';
+  document.getElementById('outVc').textContent     = phiVc.toFixed(1) + ' k';
+  document.getElementById('outStirrups').textContent = stirrupNote;
+  document.getElementById('outStirrupSp').textContent = stirrupSp;
+
+  // Summary
+  document.getElementById('sumSize').textContent    = L + ' ft × ' + Lp + ' ft';
+  document.getElementById('sumBeam').textContent    = b + ' in × ' + dRec + ' in';
+  document.getElementById('sumNum').textContent     = Nl + ' / ' + Ns;
+  document.getElementById('sumSlab').textContent    = slabThk + ' in';
+  document.getElementById('sumBot').textContent     = botBars.label;
+  document.getElementById('sumTop').textContent     = topBars.label;
+  document.getElementById('sumStirrup').textContent = stirrupNote.replace(' closed ties', '');
+  document.getElementById('sumFactors').textContent = Cw + ' / ' + oneC.toFixed(2) + ' / ' + Ic.toFixed(1);
+}
+
+function resetDefaults() {
+  document.getElementById('length').value = 60;
+  document.getElementById('width').value = 30;
+  document.getElementById('zip').value = 77581;
+  document.getElementById('pi').value = 35;
+  document.getElementById('w').value = 200;
+  document.getElementById('fc').value = 3000;
+  document.getElementById('fy').value = 60000;
+  document.getElementById('bwidth').value = 12;
+  document.getElementById('cwOverride').value = '';
+  calculate();
+}
+
+// Auto-calculate on load and on input change
+document.addEventListener('DOMContentLoaded', () => {
+  calculate();
+  document.querySelectorAll('#calc input').forEach(inp => {
+    inp.addEventListener('input', calculate);
+  });
+});
+</script>
+</body>
+</html>
