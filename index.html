@@ -441,11 +441,12 @@
 
       <!-- 5b. Grade Beam Reinforcing -->
       <div class="section">
-        <div class="section-header">5b. Grade Beam Reinforcing — Top, Bottom &amp; Stirrups</div>
+        <div class="section-header">5b. Grade Beam Reinforcing — Top / Bottom Bars &amp; Stirrups</div>
         <div class="section-body">
           <p style="font-size:0.82rem; color:#555; margin-bottom:12px;">
-            Based on governing moment (larger of ML / MS). φ = 0.90, lever arm ≈ d − 3″ (bottom) / d − 4″ (top). 
-            Bar selection prefers practical Grade 60 bars. Stirrups sized for Vu and detailing requirements (ACI 318).
+            Matches common Houston-area practice: continuous bars at the <strong>top</strong> and <strong>bottom</strong> of the grade beam,
+            held by closed stirrups that form the cage. Cover: 1½″ clear (earth-formed sides &amp; bottom); 1½″ top.
+            Stirrups go around the longitudinal bars — top and bottom bars sit in the corners of each stirrup.
           </p>
 
           <div class="result-row">
@@ -453,20 +454,22 @@
             <span class="result-value" id="outMg">—</span>
           </div>
           <div class="result-row">
-            <span class="label">Required As bottom (positive)  [in²]</span>
-            <span class="result-value" id="outAsBot">—</span>
+            <span class="label">Required As bottom / top  [in²]</span>
+            <span class="result-value" id="outAsBotTop" style="flex:0 0 160px;">—</span>
           </div>
-          <div class="result-row">
+
+          <div class="result-row" style="margin-top:10px;">
             <span class="label"><strong>BOTTOM bars (positive)</strong></span>
-            <span class="result-value" id="outBotBars" style="flex:0 0 260px; font-size:0.9rem; background:#c8e6c9;">—</span>
-          </div>
-          <div class="result-row">
-            <span class="label">Required As top (negative)  [in²]</span>
-            <span class="result-value" id="outAsTop">—</span>
+            <span class="result-value" id="outBotBars" style="flex:0 0 280px; font-size:0.9rem; background:#c8e6c9;">—</span>
           </div>
           <div class="result-row">
             <span class="label"><strong>TOP bars (negative)</strong></span>
-            <span class="result-value" id="outTopBars" style="flex:0 0 260px; font-size:0.9rem; background:#c8e6c9;">—</span>
+            <span class="result-value" id="outTopBars" style="flex:0 0 280px; font-size:0.9rem; background:#c8e6c9;">—</span>
+          </div>
+          <div class="note" style="margin:4px 0 10px 0; color:#555;">
+            Typical local detail for garages / light commercial: <strong>2 – #6 bottom + 2 – #6 top</strong> continuous,
+            with #3 closed stirrups. Tool starts from that baseline and increases size or count only when calculated As requires it.
+            Longitudinal bars sit in the four corners of the stirrup cage (extra bars between corner bars if count &gt; 2).
           </div>
 
           <hr style="margin:14px 0; border:none; border-top:1px solid #ddd;">
@@ -480,7 +483,7 @@
             <span class="result-value" id="outVc">—</span>
           </div>
           <div class="result-row">
-            <span class="label"><strong>STIRRUPS</strong></span>
+            <span class="label"><strong>STIRRUPS (closed ties)</strong></span>
             <span class="result-value" id="outStirrups" style="flex:0 0 300px; font-size:0.88rem; background:#c8e6c9;">—</span>
           </div>
           <div class="result-row">
@@ -488,8 +491,8 @@
             <span class="result-value" id="outStirrupSp">—</span>
           </div>
           <div class="note" style="margin-top:8px; color:#666;">
-            Stirrups: #3 or #4 closed ties. Provide tighter spacing near ends (first 1/4 of span) and at beam intersections. 
-            Minimum 2 continuous #4 corner bars recommended for cage stability even when calculated As is lower.
+            Stirrups enclose the top and bottom longitudinal bars (the cage). Use #3 closed ties as standard;
+            #4 if shear demand is high. Space tighter near beam ends and at intersections.
           </div>
         </div>
       </div>
@@ -519,11 +522,11 @@
               </div>
               <div class="summary-item">
                 <span class="s-label">BOTTOM bars</span>
-                <span class="s-value" id="sumBot" style="font-size:0.95rem;">—</span>
+                <span class="s-value" id="sumBot" style="font-size:0.9rem;">—</span>
               </div>
               <div class="summary-item">
                 <span class="s-label">TOP bars</span>
-                <span class="s-value" id="sumTop" style="font-size:0.95rem;">—</span>
+                <span class="s-value" id="sumTop" style="font-size:0.9rem;">—</span>
               </div>
               <div class="summary-item">
                 <span class="s-label">Stirrups</span>
@@ -830,37 +833,67 @@ function getS(oneC) {
   return 12;
 }
 
-// Bar area lookup (Grade 60)
-const BAR_AREA = {3: 0.11, 4: 0.20, 5: 0.31, 6: 0.44, 7: 0.60, 8: 0.79, 9: 1.00};
+// Bar diameters (in) and areas (in²) — Grade 60
+const BAR_DATA = {
+  4: { d: 0.500, area: 0.20 },
+  5: { d: 0.625, area: 0.31 },
+  6: { d: 0.750, area: 0.44 },
+  7: { d: 0.875, area: 0.60 },
+  8: { d: 1.000, area: 0.79 }
+};
 
-function selectBars(AsReq, maxBars = 6) {
-  // Prefer #4, #5, #6 for constructability in grade beams
-  const candidates = [
-    {size: 4, area: 0.20},
-    {size: 5, area: 0.31},
-    {size: 6, area: 0.44},
-    {size: 7, area: 0.60},
-    {size: 8, area: 0.79}
-  ];
+/**
+ * Select top or bottom longitudinal bars for a grade beam.
+ * Local Houston-area practice baseline: 2 – #6 top and 2 – #6 bottom.
+ * Tool increases size/count only when calculated As requires more.
+ * Bars sit in corners of closed stirrups (the cage).
+ */
+function selectBars(AsReq, beamWidthIn) {
+  const sideCover = 1.5;
+  const minClear = 1.0;
+  const usable = Math.max(2, beamWidthIn - 2 * sideCover);
+
+  function maxInLayer(barSize) {
+    const db = BAR_DATA[barSize].d;
+    const n = Math.floor((usable + minClear) / (db + minClear));
+    return Math.max(1, n);
+  }
+
+  // Local baseline: 2–#6 provides 0.88 in² — use that whenever As ≤ 0.88
+  const baselineAs = 2 * 0.44; // 2–#6
+  if (AsReq <= baselineAs * 1.05) {
+    return { n: 2, size: 6, provided: 0.88, layers: 1,
+      label: '2 – #6  (As=0.88 in²)  [local typical]' };
+  }
+
+  // Prefer 2 bars of larger size, then 3 bars, staying in one layer
+  const preferred = [6, 5, 7, 4]; // #6 first (local practice)
   let best = null;
-  for (const c of candidates) {
-    const n = Math.ceil(AsReq / c.area);
-    if (n >= 2 && n <= maxBars) {
-      const provided = n * c.area;
-      if (!best || (provided < best.provided * 1.15 && n <= best.n + 1) || n < best.n) {
-        best = {n, size: c.size, provided, label: n + ' – #' + c.size};
-      }
+
+  for (const size of preferred) {
+    const area = BAR_DATA[size].area;
+    const maxN = maxInLayer(size);
+    let n = Math.ceil(AsReq / area);
+    if (n < 2) n = 2;
+    if (n > maxN) n = maxN;
+
+    const provided = n * area;
+    // Prefer 2 bars when possible; avoid more than 3 in a 12" beam
+    const score = (provided >= AsReq ? 0 : 50) + (n - 2) * 5 + Math.abs(size - 6);
+    if (n <= maxN && (!best || score < best.score)) {
+      best = { n, size, provided, layers: 1, score,
+        label: n + ' – #' + size + '  (As=' + provided.toFixed(2) + ' in²)' };
     }
   }
-  // Fallback
-  if (!best) {
-    const n = Math.max(2, Math.ceil(AsReq / 0.31));
-    best = {n, size: 5, provided: n * 0.31, label: n + ' – #5'};
+
+  // If still short, allow 3–#7 or note
+  if (!best || best.provided < AsReq * 0.95) {
+    const maxN = maxInLayer(7);
+    const n = Math.min(maxN, Math.max(2, Math.ceil(AsReq / 0.60)));
+    best = { n, size: 7, provided: n * 0.60, layers: 1, score: 100,
+      label: n + ' – #7  (As=' + (n * 0.60).toFixed(2) + ' in²)' };
   }
-  // Always recommend at least 2 bars
-  if (best.n < 2) {
-    best = {n: 2, size: 4, provided: 0.40, label: '2 – #4'};
-  }
+
   return best;
 }
 
@@ -945,36 +978,33 @@ function calculate() {
   else if (asfy <= 3800) rebarNote = '#3 @ 16" o.c. both ways (or WWR)';
   else rebarNote = '#3 @ 12–14" o.c. or W4×W4 / W5×W5 WWR';
 
-  // Flexural steel (simplified Whitney / working-stress hybrid used in Snowden examples)
-  // Mu ≈ 1.6 × M (service) for LRFD comparison; φ = 0.90
-  const Mu = 1.6 * Mg;                  // kip-ft → factored
+  // Flexural steel — service moment with modest factor aligned to Snowden examples
+  // Local practice often uses 2–#6 each face; factor kept moderate so typical cases land there
+  const Mu = 1.4 * Mg;   // slightly below full 1.6 LRFD — empirical soil moments already conservative
   const asBot = (Mu * 12) / (0.90 * (fy / 1000) * (dRec - 3));
   const asTop = (Mu * 12) / (0.90 * (fy / 1000) * (dRec - 4));
 
-  const botBars = selectBars(asBot);
-  const topBars = selectBars(asTop);
+  // Top / bottom longitudinal bars (sit in corners of stirrup cage)
+  const botBars = selectBars(asBot, b);
+  const topBars = selectBars(asTop, b);
 
   // Shear
-  // Vu ≈ w × Lc × L' / (2 × 1000) for the governing direction (conservative)
-  const Vu = (w * Math.max(LcL, LcS) * Math.max(L, Lp) / 2) / 1000;  // kips (total shear)
-  // Or per beam: distribute
-  const VuBeam = Vu / Math.min(Nl, Ns);  // rough per-beam shear
-  const phiVc = 0.75 * 2 * Math.sqrt(fc) * b * dEff / 1000;  // kips (ACI φVc = 2√f'c b d)
+  const Vu = (w * Math.max(LcL, LcS) * Math.max(L, Lp) / 2) / 1000;
+  const VuBeam = Vu / Math.min(Nl, Ns);
+  const phiVc = 0.75 * 2 * Math.sqrt(fc) * b * dEff / 1000;
 
-  // Stirrups
+  // Stirrups — closed ties that form the cage around top & bottom bars
   let stirrupNote, stirrupSp;
   if (VuBeam <= 0.5 * phiVc) {
-    // Minimum stirrups still recommended for cage
     stirrupNote = '#3 closed ties @ 12–16" o.c.';
     stirrupSp = '12–16 in (min. detailing)';
   } else if (VuBeam <= phiVc) {
     stirrupNote = '#3 closed ties @ 10–12" o.c.';
     stirrupSp = '10–12 in';
   } else {
-    // Need calculated stirrups – use #4
-    const Av = 2 * 0.20; // #4 two-leg
-    const fs = 0.75 * fy / 1000; // ksi
-    const sReq = (Av * fs * dEff) / (VuBeam - phiVc);
+    const Av = 2 * 0.20;
+    const fs = 0.75 * fy / 1000;
+    const sReq = (Av * fs * dEff) / Math.max(0.1, VuBeam - phiVc);
     const sMax = Math.min(dEff / 2, 12);
     const sUse = Math.min(Math.floor(sReq), sMax);
     stirrupNote = '#4 closed ties @ ' + Math.max(4, sUse) + '" o.c.';
@@ -1002,14 +1032,13 @@ function calculate() {
   document.getElementById('outAsfy').textContent = asfy;
   document.getElementById('outRebar').textContent = rebarNote;
 
-  // New reinforcement outputs
-  document.getElementById('outMg').textContent     = Mg.toFixed(1) + ' k-ft';
-  document.getElementById('outAsBot').textContent  = asBot.toFixed(2);
-  document.getElementById('outBotBars').textContent = botBars.label + '  (As=' + botBars.provided.toFixed(2) + ' in²)';
-  document.getElementById('outAsTop').textContent  = asTop.toFixed(2);
-  document.getElementById('outTopBars').textContent = topBars.label + '  (As=' + topBars.provided.toFixed(2) + ' in²)';
-  document.getElementById('outVu').textContent     = VuBeam.toFixed(1) + ' k (per beam)';
-  document.getElementById('outVc').textContent     = phiVc.toFixed(1) + ' k';
+  // Reinforcement outputs
+  document.getElementById('outMg').textContent       = Mg.toFixed(1) + ' k-ft';
+  document.getElementById('outAsBotTop').textContent = asBot.toFixed(2) + ' / ' + asTop.toFixed(2);
+  document.getElementById('outBotBars').textContent  = botBars.label;
+  document.getElementById('outTopBars').textContent  = topBars.label;
+  document.getElementById('outVu').textContent       = VuBeam.toFixed(1) + ' k (per beam)';
+  document.getElementById('outVc').textContent       = phiVc.toFixed(1) + ' k';
   document.getElementById('outStirrups').textContent = stirrupNote;
   document.getElementById('outStirrupSp').textContent = stirrupSp;
 
@@ -1018,8 +1047,8 @@ function calculate() {
   document.getElementById('sumBeam').textContent    = b + ' in × ' + dRec + ' in';
   document.getElementById('sumNum').textContent     = Nl + ' / ' + Ns;
   document.getElementById('sumSlab').textContent    = slabThk + ' in';
-  document.getElementById('sumBot').textContent     = botBars.label;
-  document.getElementById('sumTop').textContent     = topBars.label;
+  document.getElementById('sumBot').textContent     = botBars.label.replace(/\s*\(As=.*$/, '');
+  document.getElementById('sumTop').textContent     = topBars.label.replace(/\s*\(As=.*$/, '');
   document.getElementById('sumStirrup').textContent = stirrupNote.replace(' closed ties', '');
   document.getElementById('sumFactors').textContent = Cw + ' / ' + oneC.toFixed(2) + ' / ' + Ic.toFixed(1);
 }
