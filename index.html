@@ -398,8 +398,9 @@
             <span class="result-value" id="outSlab">—</span>
           </div>
           <div class="note" style="margin:-2px 0 8px 0; color:#555;">
-            Driven mainly by Effective PI → (1-C). Also increases when beam spacing is large or unit weight ≥ 250 psf.
-            Change the PI input to see thickness update (try PI = 15, 25, 35, 45).
+            Driven by Effective PI → (1-C), building size, and beam spacing. Garages / small buildings (≤30×30) stay at 4″ for moderate PI.
+            IRC minimum = 3½″. Try PI = 15 → 3½–4″, PI = 32 on 25×25 → 4″, PI = 45 on large building → 5–5½″.
+            Concrete strength (f′c) does not change slab thickness in this method.
           </div>
           <div class="result-row">
             <span class="label">Min slab reinforcing As·fy (lb/ft)</span>
@@ -799,32 +800,47 @@ function calculate() {
   const dRec = Math.ceil(Math.max(dL, dS));
   const dEff = dRec - 3.0;              // effective depth approx (clear cover + ½ bar)
 
-  // Slab thickness — driven primarily by soil-climate (1-C / PI) and secondarily by
-  // beam spacing and unit weight (heavier loads or larger spans between beams → thicker slab)
+  // Slab thickness — practical residential / garage / light commercial rules
+  // Primary driver: soil-climate (1-C from PI). Secondary: building size & beam spacing.
+  // Aligns with common Texas practice and IRC R506 (min 3.5") while respecting Snowden guidance.
   let slabThk, asfy, rebarNote;
-  // Base thickness from (1-C)
-  if (oneC <= 0.12) {
-    slabThk = 4; asfy = 2600;
-  } else if (oneC <= 0.18) {
-    slabThk = 4.5; asfy = 3200;
-  } else if (oneC <= 0.24) {
-    slabThk = 5; asfy = 4000;
-  } else if (oneC <= 0.30) {
-    slabThk = 5.5; asfy = 4600;
-  } else {
-    slabThk = 6; asfy = 5200;
-  }
-  // Bump thickness when beam spacing is large or unit weight is high
-  if (S >= 18 || w >= 250) slabThk = Math.min(6.5, slabThk + 0.5);
-  if (S >= 16 && oneC > 0.20) slabThk = Math.min(6.5, slabThk + 0.5);
-  // Round to practical half-inch
-  slabThk = Math.ceil(slabThk * 2) / 2;
-  if (slabThk < 4) slabThk = 4;
-  if (slabThk > 6.5) slabThk = 6.5;
+  const area = L * Lp;                  // building footprint (sf)
+  const isSmall = (L <= 30 && Lp <= 30) || area <= 900;   // typical garage / small addition
 
-  if (asfy <= 3000) rebarNote = '#3 @ 18" o.c. both ways';
-  else if (asfy <= 4200) rebarNote = '#3 @ 14–16" o.c. or WWR';
-  else rebarNote = '#3 @ 12" o.c. or W4×W4 / W5×W5 WWR';
+  // Base thickness from soil-climate demand
+  if (oneC <= 0.14) {
+    slabThk = 3.5; asfy = 2400;         // low PI — IRC minimum territory
+  } else if (oneC <= 0.20) {
+    slabThk = 4.0; asfy = 2800;
+  } else if (oneC <= 0.26) {
+    slabThk = 4.0; asfy = 3500;         // PI ~30–35: still 4" for light residential
+  } else if (oneC <= 0.32) {
+    slabThk = 5.0; asfy = 4200;
+  } else {
+    slabThk = 5.5; asfy = 5200;         // high PI / aggressive soils
+  }
+
+  // Size / spacing adjustments
+  if (isSmall && oneC <= 0.28) {
+    // Garages and small buildings: keep slab thinner; beams do the work
+    slabThk = Math.min(slabThk, 4.0);
+  }
+  if (!isSmall && S >= 16 && oneC > 0.22) {
+    slabThk = Math.min(6.0, slabThk + 0.5);   // larger footprint + wider beam spacing
+  }
+  if (w >= 250 && oneC > 0.18) {
+    slabThk = Math.min(6.0, slabThk + 0.5);   // heavier superstructure
+  }
+
+  // Practical limits
+  slabThk = Math.round(slabThk * 2) / 2;     // nearest 0.5"
+  if (slabThk < 3.5) slabThk = 3.5;          // IRC R506.1 minimum
+  if (slabThk > 6.0) slabThk = 6.0;
+
+  // Slab reinforcing note
+  if (asfy <= 2800) rebarNote = '#3 @ 18" o.c. both ways (or WWR)';
+  else if (asfy <= 3800) rebarNote = '#3 @ 16" o.c. both ways (or WWR)';
+  else rebarNote = '#3 @ 12–14" o.c. or W4×W4 / W5×W5 WWR';
 
   // Flexural steel (simplified Whitney / working-stress hybrid used in Snowden examples)
   // Mu ≈ 1.6 × M (service) for LRFD comparison; φ = 0.90
