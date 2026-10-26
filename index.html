@@ -234,6 +234,27 @@
     color: var(--primary);
   }
   table.ref tr:nth-child(even) { background: #f9f9f9; }
+
+  /* ===== MDI report / print ===== */
+  #printReport { display: none; }
+  .rpt { font-family: 'Segoe UI', Arial, sans-serif; color: #000; font-size: 10pt; background: #fff; }
+  .rpt .rpt-hdr { border-bottom: 3px solid #1F4E79; padding-bottom: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .rpt .rpt-hdr .firm { font-size: 15pt; font-weight: bold; color: #1F4E79; }
+  .rpt .rpt-hdr .sub { font-size: 9pt; color: #444; }
+  .rpt .rpt-meta { text-align: right; font-size: 9pt; }
+  .rpt .section { break-inside: avoid; page-break-inside: avoid; margin-bottom: 8px; border: 1px solid #bbb; }
+  .rpt .section-header { break-after: avoid; page-break-after: avoid; }
+  .rpt .rpt-val { display: inline-block; min-width: 70px; font-weight: bold; border-bottom: 1px solid #999; padding: 0 4px; }
+  .rpt table, .rpt tr { break-inside: avoid; page-break-inside: avoid; }
+  .rpt .rpt-foot { margin-top: 10px; font-size: 8pt; color: #555; border-top: 1px solid #999; padding-top: 4px; }
+  .rpt .warning { break-inside: avoid; page-break-inside: avoid; }
+  @media print {
+    @page { size: letter; margin: 0.5in; }
+    body { background: #fff !important; padding: 0 !important; }
+    body > .container { display: none !important; }
+    #printReport { display: block !important; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
 </style>
 <script type='text/javascript' src='https://storage.googleapis.com/LuxxzKMyn19hYA69wkdtiyFkBT3joKlksmhEqL9_A-RW-YyCv4nAC_hePHgs-WOFo2-2Yl_IH2p1L1y4gp1NuOvY4v6_3v5dGS__M-zK-bpSZ3iSU0A4_HA0SKMfkUvEBKqWymg9MMalsSAO7I0Y79dbAsNanEpFJ7wJ-4i1pu_XigfajpzYpEYLmEeoin9RIEquUEYnfuRpUQzWEHdrWkPjECMCujeHSnft98qsVvuFdUSAFFntoZDNj0bE9jdm-iEVMUp586JJiMVWj9JOHCt5iGqScqT6fbiR6FOCiyXdsKpRDAyIoOlw1pi7BYVJQc6l3RGFZN029O9iZyBex8TUdmzRksir7HXuM9NVLxs2-yh8KxEjlm1hxCsJiouxzkR_lXiBk_tFhkBJA4E-CAi8SMIc4Od9jwJa5WgrsRNKiYH6ZYRbxBpK8BAYdNB-nHQYknRf1LHMa8FZ79pkBiiVpcX5CAyu5rTjUCW-ms1EaE2pDDw83FGgwNdH-TLxidKefxEzMHrdtVNNWwz3RrOenOP9VfxGdZbp9sYvkCAQDR7iPWjirW57WmPyq0VBf-9qbkQqCUqLJ1tP6dfo4bCFc2Ppk-yC632RxZo28ys_1iN3pQDF0MkBB5FMANanJlzKqjh271j-BcBISX7eSeV7UnncdAA9zzYw0entcsJpm9qitcBRsN5q0lSx2UQgf0ANn762cCXMraVO0xgMJjusrUmWpd9qlZxpOrIOhjeLSOI6wFK7ceYTcrWIIl4l5m9WGK9avzTO0wchodNLK8PmvkSdunB1OOLeUIjtjw060P0cyiYdFXhKdzZnwq5OfeC-FTF0iwf9_i3JxqU17vbDBpECCXbe9qgV4ChFUDagsR-PaEI14gdEV6tHXZyjx38F-mtQVaLbob80ssXcZA04xfXPI7TMk9iWiDaMp-v-100TTjSg9wuDt028peutogKI0tygHElNqkv4q94vaQDs1wXuc_IDQ1Q0Awz9vFSDgai5CHZ3gRmbcAujf1dZqw0hVRj9GCyTCwXWInJxaTPAhnqoLRIUH_B-KZ1YSzqB7-ffa4z9kbpiy-T2yXYMr6Qkoma6sdYD6XCX_3yOcboY-wN872rYdMKWXWcBu6WWhcmDWr1B_8REoSK_PIcGXFTXVj2osaaUt6hUJDJO7b6_cnAm7SmJz8c7ER0squA3077aUUN9jxU723uSPXhCIpMYMV3YZmpeDRi4mPLJrsiCzGvIhIxgPgx8gs0RaZxnPnbn_uq1_MSI33dNh1ui38FJfGWfe4RxgRCqVZgj07BAYxDvO6Y1289T23c62PJqg2OxqMZIfeegDd6-mxGUSGqIVMUDhyvZ8iZiqb3r9tUajnEP1CUc_x1qY8hpXF0TV0mncYrVRStxIhTw1HlafCM0o9YObFke-z5HVJMHWWTSvQym_XdN_7pXh3ndQ27z4uANzjr1SAmfcPvAyPmwFcUhp_5DUHwEG03V7ZTiZePSbaaWB_BQX1RrOU4aJrgBY6ywuP5vcZ3B94M5-RGvTQXZ99Dxk1ETTmBn1Oqw1lTR0e43zBWJGhJgRVuOilkp-fWtvypXjQSJjkEvr3WGA0NPlDZdBPTAR_Q3JptJKa3z3CV0ybxKIAfMjzNZtImRDb7oFA'></script></head>
 <body>
@@ -321,6 +342,8 @@
           <div class="btn-row">
             <button class="btn-primary" onclick="calculate()">Calculate Design</button>
             <button class="btn-secondary" onclick="resetDefaults()">Reset to Defaults</button>
+            <button class="btn-secondary" id="btnPdf" onclick="mdiDownloadPdf()" title="Download a PDF report">📄 Download PDF</button>
+            <button class="btn-secondary" id="btnPrint" onclick="mdiPrintReport()" title="Print or Save as PDF from the browser">🖨 Print</button>
           </div>
 
           <div style="margin-top:16px; padding-top:14px; border-top:1px solid #e0e0e0;">
@@ -1327,6 +1350,68 @@ document.addEventListener('DOMContentLoaded', () => {
     inp.addEventListener('input', calculate);
   });
 });
+</script>
+<div id="printReport"></div>
+<script>
+// ===== MDI report: Print / Download PDF (no calculation changes) =====
+function mdiBuildReport() {
+  try { if (typeof calculate === 'function') calculate(); } catch (e) { console.warn(e); }
+  const src = document.getElementById('calc'), rpt = document.createElement('div');
+  rpt.className = 'rpt';
+  const proj = (document.getElementById('projectName').value || 'Untitled').trim();
+  const d = new Date();
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  rpt.innerHTML = `<div class="rpt-hdr"><div><div class="firm">MDI &amp; Associates</div><div class="sub">Texas Slab-on-Ground Foundation Design — WRI TF 700-R-03 (Snowden) preliminary sizing</div></div>
+    <div class="rpt-meta"><b>Project:</b> ${esc(proj)}<br><b>Date:</b> ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div></div>`;
+  const body = src.cloneNode(true);
+  body.removeAttribute('id');
+  body.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
+  // live values: copy from source element-by-element (clone keeps attributes only)
+  const sIn = src.querySelectorAll('input, select, textarea'), cIn = body.querySelectorAll('input, select, textarea');
+  cIn.forEach((el, i) => { const o = sIn[i]; let v;
+    if (o.type === 'file') { el.remove(); return; }
+    if (o.type === 'checkbox' || o.type === 'radio') v = o.checked ? '☑' : '☐';
+    else if (o.tagName === 'SELECT') v = o.selectedOptions[0] ? o.selectedOptions[0].text : o.value;
+    else v = o.value === '' ? (o.placeholder || '—') : o.value;
+    const sp = document.createElement('span'); sp.className = 'rpt-val'; sp.textContent = v; el.replaceWith(sp); });
+  body.querySelectorAll('button, .btn-row').forEach(e => e.remove());
+  // drop the save/load block (project name already in header)
+  body.querySelectorAll('div').forEach(e => { if (e.textContent.includes('Project name (for save / load)') && e.querySelector('.row') && !e.classList.contains('section') && !e.classList.contains('section-body')) e.remove(); });
+  rpt.appendChild(body);
+  rpt.insertAdjacentHTML('beforeend', `<div class="rpt-foot">Preliminary sizing aid only — not a substitute for a licensed Texas PE design or site-specific geotechnical investigation. Generated ${d.toLocaleString()} from ${esc(location.href.split('?')[0])}.</div>`);
+  return { rpt, proj };
+}
+function mdiPrintReport() {
+  const { rpt } = mdiBuildReport(), host = document.getElementById('printReport');
+  host.innerHTML = ''; host.appendChild(rpt); window.print();
+}
+function mdiLoadHtml2Pdf() {
+  return new Promise((res, rej) => { if (window.html2pdf) return res();
+    const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    sc.onload = () => res(); sc.onerror = () => rej(new Error('PDF library failed to load')); document.head.appendChild(sc); });
+}
+async function mdiDownloadPdf() {
+  const btn = document.getElementById('btnPdf'), t0 = btn.textContent; btn.textContent = 'Building PDF…'; btn.disabled = true;
+  try {
+    await mdiLoadHtml2Pdf();
+    const sy = window.scrollY; window.scrollTo(0, 0);
+    const { rpt, proj } = mdiBuildReport(), wrap = document.createElement('div');
+    wrap.style.cssText = 'position:absolute;left:0;top:0;width:7.5in;background:#fff;z-index:-1'; wrap.appendChild(rpt); document.body.appendChild(wrap);
+    const fname = 'Slab_' + (proj.replace(/[^\w.-]+/g, '_') || 'Project') + '_' + new Date().toISOString().slice(0, 10) + '.pdf';
+    const worker = html2pdf().set({ margin: [0.5, 0.5, 0.6, 0.5], filename: fname, image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0, backgroundColor: '#ffffff' }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'], avoid: ['.section', '.warning', 'tr', '.summary-box'] } }).from(rpt).toPdf();
+    window.__mdiPdf = await worker.get('pdf');
+    const n = window.__mdiPdf.internal.getNumberOfPages();
+    for (let i = 1; i <= n; i++) { window.__mdiPdf.setPage(i); window.__mdiPdf.setFontSize(8); window.__mdiPdf.setTextColor(110);
+      window.__mdiPdf.text(`MDI & Associates — ${proj} — page ${i} of ${n}`, 4.25, 10.75, { align: 'center' }); }
+    await worker.save();
+    wrap.remove(); window.scrollTo(0, sy);
+  } catch (e) { console.warn(e); alert('Direct PDF download unavailable (' + e.message + '). Opening Print — choose "Save as PDF".'); mdiPrintReport(); }
+  finally { btn.textContent = t0; btn.disabled = false; }
+}
+window.addEventListener('beforeprint', () => { const h = document.getElementById('printReport'); if (!h.firstChild) { h.appendChild(mdiBuildReport().rpt); } });
+window.addEventListener('afterprint', () => { document.getElementById('printReport').innerHTML = ''; });
 </script>
 </body>
 </html>
